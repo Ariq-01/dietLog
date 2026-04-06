@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir *)",
+      "Bash(cat)",
+      "Bash(import *)",
+      "Bash(class *)",
+      "Bash(@override)",
+      "Bash(widget *)",
+      "Bash(return *)",
+      "Bash(child: *)",
+      "Bash(padding: *)",
+      "Bash(horizontal: *)",
+      "Bash(children: *)",
+      "Bash(roundedcalendaricon(),)",
+      "Bash(sizedbox)",
+      "Bash(],)",
+      "Bash(})",
+      "Bash(eof)",
+      "Bash(rm *)",
+      "Bash(flutter *)"
+    ]
+  },
+  "$version": 3
+}
