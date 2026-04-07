@@ -1,26 +1,56 @@
-import 'package:intl/intl.dart';
+enum Calendar2026 {
+  january(1, 31, "January"),
+  february(2, 28, "February"),
+  march(3, 31, "March"),
+  april(4, 30, "April"),
+  may(5, 31, "May"),
+  june(6, 30, "June"),
+  july(7, 31, "July"),
+  august(8, 31, "August"),
+  september(9, 30, "September"),
+  october(10, 31, "October"),
+  november(11, 30, "November"),
+  december(12, 31, "December");
 
-class CalendarLogic {
-  // Lazy Getter: Hanya dihitung saat dipanggil pertama kali
-  late final List<DateTime> weekDates = _generateDates();
+  final int monthNumber;
+  final int daysInMonth;
+  final String name;
 
-  List<DateTime> _generateDates() {
-    return List.generate(7, (index) {
-      return DateTime.now().add(Duration(days: index));
-    });
-  }
+  const Calendar2026(this.monthNumber, this.daysInMonth, this.name);
 
-  // Fungsi untuk mendapatkan nama hari in englis (Sen, Sel, Rab...)
-  String getDayName(DateTime date) {
-    return DateFormat.E('id_EN').format(date);
-  }
+  DateTime firstDay() => DateTime(2026, monthNumber, 1);
+  DateTime lastDay() => DateTime(2026, monthNumber, daysInMonth);
 }
 
+const List<String> _dayNames = [
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+  'Sun',
+];
 
+class CalendarLogic {
+  const CalendarLogic();
 
-// To DO : late final => hive (duration(void async(updateed ui) (wait for users and then update ui)))
-// Misal user klik ikon ke-3
-// void onDateSelected(int index) {
- // var box = Hive.box('settings');
-//  box.put('selected_date_index', index); // Simpan index-nya saja
-//}
+  // Get current month from device local calendar
+  Calendar2026 get currentMonth {
+    final now = DateTime.now();
+    if (now.year == 2026) {
+      return Calendar2026.values[now.month - 1];
+    }
+    return Calendar2026.january;
+  }
+
+  // Get week dates from device local calendar
+  List<DateTime> get weekDates => List.generate(7, (index) {
+    return DateTime.now().add(Duration(days: index));
+  });
+
+  // Get day name in English
+  String getDayName(DateTime date) {
+    return _dayNames[date.weekday - 1];
+  }
+}
