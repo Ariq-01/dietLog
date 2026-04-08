@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
-import 'presentation/views/home_view.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'core/theme/app_theme.dart';
+import 'features/today/today_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  GoogleFonts.config.allowRuntimeFetching = false;
+  runApp(const BiteLogApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BiteLogApp extends StatelessWidget {
+  const BiteLogApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Calorie tracker App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const HomeView(),
+      title: 'BiteLog',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: const TodayScreen(),
     );
   }
 }

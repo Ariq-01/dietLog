@@ -1,44 +1,56 @@
 import 'package:flutter/material.dart';
 
+/// All design-system colours for BiteLog.
+/// Usage anywhere: `AppColors.background`, `AppColors.textPrimary`, etc.
 class AppColors {
   AppColors._();
 
-  // Background gradient
-  static const Color bgStart = Color(0xFFBECFDE);
-  static const Color bgEnd = Color(0xFFDDE6F0);
+  // ── Backgrounds ──────────────────────────────────────────────────────────
+  /// Page / Scaffold background – warm off-white
+  static const Color background = Color(0xFFEFEFED);
 
-  // Surfaces
-  static const Color cardBg = Colors.white;
+  /// Card / surface – pure white
+  static const Color surface = Color(0xFFFFFFFF);
 
-  // Week date chips
-  static const Color chipDefault = Color(0xFFE6F2EA);
-  static const Color chipSelected = Color(0xFF4CAF50);
-  static const Color chipSpecial = Color(0xFFFCE8E8);
-  static const Color chipTextDefault = Color(0xFF212121);
-  static const Color chipTextSelected = Colors.white;
-  static const Color chipTextSpecial = Color(0xFFE53935);
+  // ── Text ─────────────────────────────────────────────────────────────────
+  /// Primary text – near black
+  static const Color textPrimary = Color(0xFF1A1A1A);
 
-  // Accents
-  static const Color caloriesOrange = Color(0xFFFF7043);
-  static const Color macrosPink = Color(0xFFE91E63);
-  static const Color macrosPurple = Color(0xFF9C27B0);
+  /// Secondary text – medium gray (labels, captions)
+  static const Color textSecondary = Color(0xFF8A8A8A);
 
-  // Macro progress bars
-  static const Color barCalories = Color(0xFF81C784);
-  static const Color barCarbs = Color(0xFF64B5F6);
-  static const Color barProtein = Color(0xFF7986CB);
-  static const Color barFat = Color(0xFF90A4AE);
-  static const Color barBg = Color(0xFFE0E0E0);
+  /// Tertiary / placeholder text
+  static const Color textTertiary = Color(0xFFBCBCBC);
 
-  // Text
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF6B6B6B);
-  static const Color textHint = Color(0xFF9E9E9E);
+  // ── Week strip ───────────────────────────────────────────────────────────
+  /// Active day circle background
+  static const Color activeDayBackground = Color(0xFF1A1A1A);
 
-  // Icons
-  static const Color iconMuted = Color(0xFF9E9E9E);
-  static const Color iconAction = Color(0xFF757575);
+  /// Text on active day circle
+  static const Color activeDayText = Color(0xFFFFFFFF);
 
-  // Input
-  static const Color inputShadow = Color(0x14000000);
+  // ── Task card ────────────────────────────────────────────────────────────
+  /// Unchecked checkbox border
+  static const Color checkboxBorder = Color(0xFFD0D0CE);
+
+  /// Duration label colour
+  static const Color taskDuration = Color(0xFF8A8A8A);
+
+  // ── Stat badges ──────────────────────────────────────────────────────────
+  /// Badge pill background
+  static const Color badgeBackground = Color(0xFFE4E4E1);
+
+  /// Badge text / icon colour
+  static const Color badgeText = Color(0xFF6A6A6A);
+
+  // ── Bottom navigation ────────────────────────────────────────────────────
+  /// Bottom nav bar background
+  static const Color bottomNavBackground = Color(0xFF1C1C1C);
+
+  /// Bottom nav icon colour
+  static const Color bottomNavIcon = Color(0xFFFFFFFF);
+
+  // ── Misc ─────────────────────────────────────────────────────────────────
+  /// Divider / separator line
+  static const Color divider = Color(0xFFE2E2DF);
 }

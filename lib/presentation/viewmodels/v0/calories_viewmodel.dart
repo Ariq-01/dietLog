@@ -1,1 +1,0 @@
-// load data dari ai , dan data ny di

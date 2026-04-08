@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'app_colors.dart';
 
+/// Central theme configuration.
+/// Usage in MaterialApp: `theme: AppTheme.light`
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get theme => ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.chipSelected,
-      brightness: Brightness.light,
-    ),
-    scaffoldBackgroundColor: Colors.transparent,
-    cardTheme: const CardThemeData(
-      elevation: 0,
-      color: AppColors.cardBg,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-    ),
-    textTheme: const TextTheme(
-      bodyMedium: TextStyle(fontFamily: 'Roboto', color: AppColors.textPrimary),
-    ),
-  );
-}
-
-class AppIconTheme {
-  AppIconTheme._();
-
-  static const double activeOpacity = 1.0;
-  static const double inactiveOpacity = 0.4;
-  static const Color selectedColor = AppColors.chipSelected;
-  static const Color unselectedColor = AppColors.chipDefault;
+  static ThemeData get light => ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.background,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.activeDayBackground,
+          brightness: Brightness.light,
+          surface: AppColors.surface,
+        ),
+        // Apply Inter across the entire app's Material text theme
+        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+        ),
+        cardTheme: const CardThemeData(
+          color: AppColors.surface,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+        dividerTheme: const DividerThemeData(
+          color: AppColors.divider,
+          thickness: 1,
+          space: 1,
+        ),
+      );
 }
