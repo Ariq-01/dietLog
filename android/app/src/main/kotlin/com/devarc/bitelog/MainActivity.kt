@@ -1,4 +1,4 @@
-package com.example.bitelog
+package com.devarc.bitelog
 
 import io.flutter.embedding.android.FlutterActivity
 

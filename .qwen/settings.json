@@ -18,7 +18,9 @@
       "Bash(})",
       "Bash(eof)",
       "Bash(rm *)",
-      "Bash(flutter *)"
+      "Bash(flutter *)",
+      "Bash(git checkout *)",
+      "Bash(ls *)"
     ]
   },
   "$version": 3
