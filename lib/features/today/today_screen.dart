@@ -68,6 +68,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     sliver: SliverToBoxAdapter(
                       child: WeekStripWidget(
+                        week: _vm.week,
                         selectedDate: _vm.selectedDate,
                         onDateTap: _vm.onDateSelected,
                       ),

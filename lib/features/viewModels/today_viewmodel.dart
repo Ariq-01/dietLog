@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../data/models/week_model.dart';
+
 /// Manages state for TodayScreen.
-/// Handles date selection and any today-specific UI state.
+/// Week model is generated once at init — never recomputed.
+/// Default selected date = today.
 class TodayViewModel extends ChangeNotifier {
-  DateTime _selectedDate = DateTime.now();
+  final WeekModel week = WeekModel.today();
+  late DateTime _selectedDate;
+
+  TodayViewModel() : _selectedDate = DateTime.now();
 
   // ── Getters ──────────────────────────────────────────────────────────────
 

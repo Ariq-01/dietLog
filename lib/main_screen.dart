@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/page_view_indicator.dart';
 import '../features/home/pages/goals_page.dart';
 import '../features/home/pages/habits_page.dart';
 import '../features/home/pages/notes_page.dart';
@@ -8,7 +9,6 @@ import '../features/home/pages/settings_page.dart';
 import '../features/home/pages/stats_page.dart';
 import '../features/home/pages/tasks_page.dart';
 import '../features/home/pages/today_page.dart';
-import '../features/home/widgets/page_view_indicator.dart';
 
 /// Main home screen with 7 swipeable pages.
 /// Pages: Today | Tasks | Habits | Notes | Stats | Goals | Settings

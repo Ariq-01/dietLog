@@ -14,13 +14,13 @@ class ApiClient {
   };
 
   static Future<dynamic> get(String path) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final uri = Uri.parse('${ApiConfig.apiUrl}$path');
     final response = await _client.get(uri, headers: _headers);
     return _handleResponse(response);
   }
 
   static Future<dynamic> post(String path, Map<String, dynamic> body) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final uri = Uri.parse('${ApiConfig.apiUrl}$path');
     final response = await _client.post(
       uri,
       headers: _headers,
@@ -30,7 +30,7 @@ class ApiClient {
   }
 
   static Future<dynamic> put(String path, Map<String, dynamic> body) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final uri = Uri.parse('${ApiConfig.apiUrl}$path');
     final response = await _client.put(
       uri,
       headers: _headers,
@@ -40,7 +40,7 @@ class ApiClient {
   }
 
   static Future<dynamic> delete(String path) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final uri = Uri.parse('${ApiConfig.apiUrl}$path');
     final response = await _client.delete(uri, headers: _headers);
     return _handleResponse(response);
   }

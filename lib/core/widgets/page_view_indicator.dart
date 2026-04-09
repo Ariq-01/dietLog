@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 
-/// Smooth dot indicator for PageView
+/// Smooth dot indicator for PageView.
+/// Reusable across the app (HomeScreen, Onboarding, etc.).
 class PageViewIndicator extends StatelessWidget {
   final int currentPage;
   final int pageCount;
