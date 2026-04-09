@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import 'data/mock_tasks.dart';
-import 'models/task_model.dart';
+import '../chat/viewmodels/chat_viewmodel.dart';
+import '../viewModels/today_viewmodel.dart';
 import 'widgets/bottom_nav_bar_widget.dart';
-import 'widgets/section_header_widget.dart';
-import 'widgets/task_card_widget.dart';
 import 'widgets/today_header_widget.dart';
 import 'widgets/week_strip_widget.dart';
+import '../chat/widgets/chat_bubble.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -17,33 +16,30 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  DateTime _selectedDate = DateTime.now();
-  late List<TaskSection> _sections;
+  late final TodayViewModel _vm;
+  late final ChatViewModel _chatVm;
 
   @override
   void initState() {
     super.initState();
-    // Deep-copy mock data so checkbox state is mutable
-    _sections = mockTaskSections
-        .map(
-          (s) => TaskSection(
-            title: s.title,
-            emoji: s.emoji,
-            tasks: s.tasks.map((t) => t.copyWith()).toList(),
-          ),
-        )
-        .toList();
+    _vm = TodayViewModel();
+    _chatVm = ChatViewModel();
+    _vm.addListener(_onChanged);
+    _chatVm.addListener(_onChanged);
   }
 
-  int get _totalTasks =>
-      _sections.fold(0, (sum, s) => sum + s.tasks.length);
+  void _onChanged() {
+    if (mounted) setState(() {});
+  }
 
-  double get _totalHours =>
-      _sections.fold(
-        0,
-        (sum, s) => sum + s.tasks.fold(0, (ss, t) => ss + t.durationMinutes),
-      ) /
-      60.0;
+  @override
+  void dispose() {
+    _vm.removeListener(_onChanged);
+    _chatVm.removeListener(_onChanged);
+    _vm.dispose();
+    _chatVm.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +48,6 @@ class _TodayScreenState extends State<TodayScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Scrollable content ─────────────────────────────────────
             Expanded(
               child: CustomScrollView(
                 slivers: [
@@ -61,9 +56,9 @@ class _TodayScreenState extends State<TodayScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     sliver: SliverToBoxAdapter(
                       child: TodayHeaderWidget(
-                        totalTasks: _totalTasks,
-                        completedHours: 1.5,
-                        totalHours: _totalHours,
+                        totalTasks: 0,
+                        completedHours: 0,
+                        totalHours: 0,
                       ),
                     ),
                   ),
@@ -73,14 +68,12 @@ class _TodayScreenState extends State<TodayScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     sliver: SliverToBoxAdapter(
                       child: WeekStripWidget(
-                        selectedDate: _selectedDate,
-                        onDateTap: (d) =>
-                            setState(() => _selectedDate = d),
+                        selectedDate: _vm.selectedDate,
+                        onDateTap: _vm.onDateSelected,
                       ),
                     ),
                   ),
 
-                  // Divider
                   const SliverPadding(
                     padding: EdgeInsets.only(top: 16),
                     sliver: SliverToBoxAdapter(
@@ -88,53 +81,43 @@ class _TodayScreenState extends State<TodayScreen> {
                     ),
                   ),
 
-                  // Task sections
-                  for (final section in _sections) ...[
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                      sliver: SliverToBoxAdapter(
-                        child: SectionHeaderWidget(
-                          title: section.title,
-                          emoji: section.emoji,
-                        ),
-                      ),
+                  // Chat messages
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          ChatBubble(message: _chatVm.messages[index]),
+                      childCount: _chatVm.messages.length,
                     ),
-                    SliverPadding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => Padding(
-                            padding: EdgeInsets.only(
-                              bottom:
-                                  index < section.tasks.length - 1
-                                      ? 8
-                                      : 0,
-                            ),
-                            child: TaskCardWidget(
-                              task: section.tasks[index],
-                            ),
-                          ),
-                          childCount: section.tasks.length,
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  // Bottom padding so last card isn't hidden behind nav bar
-                  const SliverPadding(
-                    padding: EdgeInsets.only(bottom: 28),
                   ),
+
+                  // Loading indicator
+                  if (_chatVm.isLoading)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 28)),
                 ],
               ),
             ),
 
-            // ── Bottom navigation ──────────────────────────────────────
+            // Input bar
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
               child: BottomNavBarWidget(
-                initialIndex: 1,
-                onTap: (_) {},
+                onSend: _chatVm.sendMessage,
+                onImageTap: () {
+                  // TODO: handle image upload
+                },
               ),
             ),
           ],

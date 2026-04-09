@@ -2,21 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../models/task_model.dart';
 
 /// White card showing a single task with a tappable checkbox,
 /// bold client name, description text and duration label.
+
+class Task {
+  final String clientName;
+  final String description;
+  final int durationMinutes;
+  final bool isCompleted;
+
+  const Task({
+    required this.clientName,
+    required this.description,
+    required this.durationMinutes,
+    this.isCompleted = false,
+  });
+}
+
 class TaskCardWidget extends StatefulWidget {
   final Task task;
 
   /// Called whenever the checkbox state changes.
   final ValueChanged<bool>? onCheckChanged;
 
-  const TaskCardWidget({
-    super.key,
-    required this.task,
-    this.onCheckChanged,
-  });
+  const TaskCardWidget({super.key, required this.task, this.onCheckChanged});
 
   @override
   State<TaskCardWidget> createState() => _TaskCardWidgetState();
