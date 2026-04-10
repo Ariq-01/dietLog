@@ -50,7 +50,27 @@ class AppColors {
   /// Bottom nav icon colour
   static const Color bottomNavIcon = Color(0xFFFFFFFF);
 
-  // ── Misc ─────────────────────────────────────────────────────────────────
+  // ── Stat cards ───────────────────────────────────────────────────────────
+  /// Calories/Macros card background – light blue
+  static const Color statCardBackground = Color(0xFFE8F4FD);
+
+  /// Macros progress ring – pink/purple
+  static const Color macrosProgress = Color(0xFFD946A8);
+
+  /// Calories icon – orange
+  static const Color caloriesIcon = Color(0xFFFF9F0A);
+
+  /// Macros icon – pink
+  static const Color macrosIcon = Color(0xFFD946A8);
+
+  // ── Alert banner ─────────────────────────────────────────────────────────
+  /// Warning banner background
+  static const Color alertBackground = Color(0xFFFFFBEB);
+
+  /// Warning icon color
+  static const Color alertIcon = Color(0xFFF59E0B);
+
+  // ── Misc ────────────────────────────────────────────────────────────────
   /// Divider / separator line
   static const Color divider = Color(0xFFE2E2DF);
 }

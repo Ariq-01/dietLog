@@ -22,19 +22,20 @@ class WeekStripWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locale = MaterialLocalizations.of(context);
-    // narrowWeekdays returns 7 day labels starting from Sunday (index 0)
     final narrowDays = locale.narrowWeekdays;
-    final monday = week.days.first.fullDate;
+    
+    // Generate week based on selectedDate's month
+    final weekModel = WeekModel.fromDate(selectedDate);
+    final monday = weekModel.days.first.fullDate;
     final dayLabels = List.generate(7, (i) {
       final d = monday.add(Duration(days: i));
-      // DateTime.weekday: 1=Monday ... 7=Sunday → convert to 0-based from Sunday
       return narrowDays[d.weekday % 7];
     });
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
-        final day = week.days[i];
+        final day = weekModel.days[i];
         final isActive = day.fullDate.year == selectedDate.year &&
             day.fullDate.month == selectedDate.month &&
             day.fullDate.day == selectedDate.day;

@@ -28,4 +28,13 @@ class WeekModel {
       return WeekDay(label: _labels[i], date: d.day, fullDate: d);
     }));
   }
+
+  /// Generate week from a specific date (for calendar navigation).
+  factory WeekModel.fromDate(DateTime date) {
+    final monday = date.subtract(Duration(days: date.weekday - 1));
+    return WeekModel._(List.generate(7, (i) {
+      final d = monday.add(Duration(days: i));
+      return WeekDay(label: _labels[i], date: d.day, fullDate: d);
+    }));
+  }
 }

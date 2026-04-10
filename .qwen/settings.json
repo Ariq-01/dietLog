@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sleep *)"
+      "Bash(sleep *)",
+      "Bash(flutter *)"
     ]
   },
   "$version": 3

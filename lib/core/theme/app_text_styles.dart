@@ -78,4 +78,37 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: AppColors.badgeText,
   );
+
+  // ── Stat cards (Calories & Macros) ────────────────────────────────────────
+  /// Card section header (e.g. "Calories", "Macros")
+  static TextStyle get statCardHeader => const TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  /// Stat value – large numbers (e.g. 2000, 0)
+  static TextStyle get statValue => const TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+  );
+
+  /// Stat label – small labels (e.g. "Food", "Carbs (g)")
+  static TextStyle get statLabel => const TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
+  );
+
+  /// Stat ratio – current/target (e.g. "0/250")
+  static TextStyle get statRatio => const TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
+  );
 }

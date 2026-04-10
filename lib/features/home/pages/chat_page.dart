@@ -5,6 +5,7 @@ import '../../chat/widgets/chat_bubble.dart';
 
 /// Single page content — shows chat messages for that page.
 /// Empty state shown if no messages exist yet.
+/// Uses AnimatedBuilder to rebuild only when its own ChatViewModel changes.
 class ChatPage extends StatelessWidget {
   final ChatViewModel chatVm;
 
@@ -12,34 +13,39 @@ class ChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // Chat messages
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) => ChatBubble(message: chatVm.messages[index]),
-            childCount: chatVm.messages.length,
-          ),
-        ),
-
-        // Loading indicator
-        if (chatVm.isLoading)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+    return AnimatedBuilder(
+      animation: chatVm,
+      builder: (context, _) {
+        return CustomScrollView(
+          slivers: [
+            // Chat messages
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => ChatBubble(message: chatVm.messages[index]),
+                childCount: chatVm.messages.length,
               ),
             ),
-          ),
 
-        // Bottom padding
-        const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
-      ],
+            // Loading indicator
+            if (chatVm.isLoading)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Bottom padding
+            const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+          ],
+        );
+      },
     );
   }
 }

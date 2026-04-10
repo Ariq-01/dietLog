@@ -6,6 +6,8 @@ import '../viewModels/today_viewmodel.dart';
 import 'widgets/bottom_nav_bar_widget.dart';
 import 'widgets/today_header_widget.dart';
 import 'widgets/week_strip_widget.dart';
+import 'widgets/calories_card.dart';
+import 'widgets/macros_card.dart';
 import '../chat/widgets/chat_bubble.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -79,6 +81,23 @@ class _TodayScreenState extends State<TodayScreen> {
                     padding: EdgeInsets.only(top: 16),
                     sliver: SliverToBoxAdapter(
                       child: Divider(color: AppColors.divider, height: 1),
+                    ),
+                  ),
+
+                  // TODO: Add AlertBanner widget (calorie goal warning)
+                  // const SliverToBoxAdapter(child: AlertBanner()),
+
+                  // TODO: CaloriesCard & MacrosCard — stat cards row
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        children: [
+                          CaloriesCard(stats: _vm.dailyStats),
+                          const SizedBox(width: 12),
+                          MacrosCard(stats: _vm.dailyStats),
+                        ],
+                      ),
                     ),
                   ),
 

@@ -8,11 +8,18 @@ import 'features/today/widgets/bottom_nav_bar_widget.dart';
 import 'features/today/widgets/today_header_widget.dart';
 import 'features/today/widgets/week_strip_widget.dart';
 import 'features/viewModels/today_viewmodel.dart';
+import 'widgets/calendar_widget.dart';
 
 /// Main home screen with 7 swipeable pages.
 /// Top (TodayHeader + WeekStrip) and bottom (BottomNavBar) stay fixed —
 /// only the chat messages area changes per page.
 /// Pages: Today | Tasks | Habits | Notes | Stats | Goals | Settings
+///
+/// Performance optimizations:
+/// - ChatPage uses AnimatedBuilder per VM → no global setState for chat
+/// - Header/week use ValueListenableBuilder → scoped rebuild only
+/// - ChatPages cached in initState → no List.generate in build
+/// - Calendar overlay has no setState → no rebuild on open/close
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -24,7 +31,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
   final TodayViewModel _todayVm = TodayViewModel();
   late final List<ChatViewModel> _chatVms;
-  int _currentPage = 0;
+  late final List<ChatPage> _chatPages;
+  OverlayEntry? _calendarOverlay;
+
+  // Single source of truth for current page — no duplicate state
+  late final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(0);
+
+  // ── Layout Constants ──────────────────────────────────────────────
+  static const _headerPadding = EdgeInsets.fromLTRB(20, 24, 20, 0);
+  static const _weekStripPadding = EdgeInsets.fromLTRB(20, 20, 20, 0);
+  static const _bottomNavPadding = EdgeInsets.fromLTRB(16, 0, 16, 16);
+  static const _calendarTop = 80.0;
+  static const _calendarHorizontal = 20.0;
 
   static const _pageTitles = [
     'Today',
@@ -36,39 +54,100 @@ class _HomeScreenState extends State<HomeScreen> {
     'Settings',
   ];
 
+  // Extracted closures to avoid recreation on every build
+  late final VoidCallback _onImageTap;
+  late final ValueChanged<String> _onSend;
+  late final ValueChanged<int> _onPageChanged;
+  late final VoidCallback _toggleCalendar;
+  late final ValueChanged<DateTime> _onDateSelected;
+  late final ValueChanged<DateTime> _onWeekDateSelected;
+
   @override
   void initState() {
     super.initState();
     // Create 7 independent ChatViewModels — one per page
     _chatVms = List.generate(7, (_) => ChatViewModel());
-    _todayVm.addListener(_onTodayChanged);
-    for (final vm in _chatVms) {
-      vm.addListener(_onChatChanged);
-    }
-  }
+    
+    // Hardcoded ChatPage instances to avoid loop overhead and ensure static structure
+    // Placed in initState to prevent recreation during build
+    _chatPages = [
+      ChatPage(chatVm: _chatVms[0]),
+      ChatPage(chatVm: _chatVms[1]),
+      ChatPage(chatVm: _chatVms[2]),
+      ChatPage(chatVm: _chatVms[3]),
+      ChatPage(chatVm: _chatVms[4]),
+      ChatPage(chatVm: _chatVms[5]),
+      ChatPage(chatVm: _chatVms[6]),
+    ];
 
-  void _onTodayChanged() {
-    if (mounted) setState(() {});
-  }
-
-  void _onChatChanged() {
-    if (mounted) setState(() {});
+    // Extracted closures to avoid recreation on every build
+    _onImageTap = () {
+      // TODO: handle image upload
+    };
+    _onSend = (text) {
+      _chatVms[_currentPageNotifier.value].sendMessage(text);
+    };
+    _onPageChanged = (page) {
+      _currentPageNotifier.value = page;
+    };
+    _toggleCalendar = () {
+      if (_calendarOverlay != null) {
+        _closeCalendar();
+      } else {
+        _openCalendar();
+      }
+    };
+    _onDateSelected = (date) {
+      _todayVm.onDateSelected(date);
+      _closeCalendar();
+    };
+    _onWeekDateSelected = _todayVm.onDateSelected;
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _todayVm.removeListener(_onTodayChanged);
     for (final vm in _chatVms) {
-      vm.removeListener(_onChatChanged);
       vm.dispose();
     }
     _todayVm.dispose();
+    _calendarOverlay?.remove();
     super.dispose();
   }
 
-  void _onSend(String text) {
-    _chatVms[_currentPage].sendMessage(text);
+  void _openCalendar() {
+    final overlay = Overlay.of(context);
+
+    _calendarOverlay = OverlayEntry(
+      builder: (context) {
+        return Stack(
+          children: [
+            GestureDetector(
+              onTap: _closeCalendar,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.transparent),
+            ),
+            Positioned(
+              top: _calendarTop,
+              left: _calendarHorizontal,
+              right: _calendarHorizontal,
+              child: CalendarWidget(
+                initialDate: _todayVm.selectedDate,
+                onDateSelected: _onDateSelected,
+                onClose: _closeCalendar,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(_calendarOverlay!);
+  }
+
+  void _closeCalendar() {
+    _calendarOverlay?.remove();
+    _calendarOverlay = null;
   }
 
   @override
@@ -79,21 +158,35 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             // ── Fixed top (does not scroll with pages) ──────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-              child: TodayHeaderWidget(
-                totalTasks: 0,
-                completedHours: 0,
-                totalHours: 0,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: WeekStripWidget(
-                week: _todayVm.week,
-                selectedDate: _todayVm.selectedDate,
-                onDateTap: _todayVm.onDateSelected,
-              ),
+            // AnimatedBuilder: only rebuild header + week when date changes
+            // Divider is outside → stays const, never rebuilds
+            AnimatedBuilder(
+              animation: _todayVm,
+              builder: (context, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: _headerPadding,
+                      child: TodayHeaderWidget(
+                        totalTasks: 0,
+                        completedHours: 0,
+                        totalHours: 0,
+                        selectedDate: _todayVm.selectedDate,
+                        onDateTap: _toggleCalendar,
+                      ),
+                    ),
+                    Padding(
+                      padding: _weekStripPadding,
+                      child: WeekStripWidget(
+                        week: _todayVm.week,
+                        selectedDate: _todayVm.selectedDate,
+                        onDateTap: _onWeekDateSelected,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const Padding(
               padding: EdgeInsets.only(top: 16),
@@ -105,37 +198,34 @@ class _HomeScreenState extends State<HomeScreen> {
               child: PageView(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
-                children: List.generate(7, (i) {
-                  return ChatPage(chatVm: _chatVms[i]);
-                }),
+                children: _chatPages, // cached list — no List.generate
               ),
             ),
 
             // ── Dot indicator ───────────────────────────────────
             const SizedBox(height: 8),
-            PageViewIndicator(
-              currentPage: _currentPage,
-              pageCount: _pageTitles.length,
+            ValueListenableBuilder<int>(
+              valueListenable: _currentPageNotifier,
+              builder: (context, page, _) {
+                return PageViewIndicator(
+                  currentPage: page,
+                  pageCount: _pageTitles.length,
+                );
+              },
             ),
             const SizedBox(height: 8),
 
             // ── Fixed bottom input bar (does not scroll) ───────
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: _bottomNavPadding,
               child: BottomNavBarWidget(
                 onSend: _onSend,
-                onImageTap: () {
-                  // TODO: handle image upload
-                },
+                onImageTap: _onImageTap, // extracted closure
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void _onPageChanged(int page) {
-    setState(() => _currentPage = page);
   }
 }
