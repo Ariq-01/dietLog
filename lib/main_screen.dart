@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'core/theme/app_colors.dart';
 import 'core/widgets/page_view_indicator.dart';
@@ -16,8 +17,8 @@ import 'widgets/calendar_widget.dart';
 /// Pages: Today | Tasks | Habits | Notes | Stats | Goals | Settings
 ///
 /// Performance optimizations:
-/// - ChatPage uses AnimatedBuilder per VM → no global setState for chat
-/// - Header/week use ValueListenableBuilder → scoped rebuild only
+/// - TodayViewModel accessed via Provider — auto rebuild on date change
+/// - ChatPages use AnimatedBuilder per VM → no global setState
 /// - ChatPages cached in initState → no List.generate in build
 /// - Calendar overlay has no setState → no rebuild on open/close
 class HomeScreen extends StatefulWidget {
@@ -29,7 +30,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
-  final TodayViewModel _todayVm = TodayViewModel();
   late final List<ChatViewModel> _chatVms;
   late final List<ChatPage> _chatPages;
   OverlayEntry? _calendarOverlay;
@@ -67,9 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Create 7 independent ChatViewModels — one per page
     _chatVms = List.generate(7, (_) => ChatViewModel());
-    
+
     // Hardcoded ChatPage instances to avoid loop overhead and ensure static structure
-    // Placed in initState to prevent recreation during build
     _chatPages = [
       ChatPage(chatVm: _chatVms[0]),
       ChatPage(chatVm: _chatVms[1]),
@@ -80,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ChatPage(chatVm: _chatVms[6]),
     ];
 
-    // Extracted closures to avoid recreation on every build
+    // Extracted closures
     _onImageTap = () {
       // TODO: handle image upload
     };
@@ -97,11 +96,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _openCalendar();
       }
     };
+
+    // TodayViewModel now from Provider — callbacks use Provider
     _onDateSelected = (date) {
-      _todayVm.onDateSelected(date);
+      context.read<TodayViewModel>().onDateSelected(date);
       _closeCalendar();
     };
-    _onWeekDateSelected = _todayVm.onDateSelected;
+    _onWeekDateSelected = (date) {
+      context.read<TodayViewModel>().onDateSelected(date);
+    };
   }
 
   @override
@@ -110,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final vm in _chatVms) {
       vm.dispose();
     }
-    _todayVm.dispose();
     _calendarOverlay?.remove();
     super.dispose();
   }
@@ -132,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
               left: _calendarHorizontal,
               right: _calendarHorizontal,
               child: CalendarWidget(
-                initialDate: _todayVm.selectedDate,
+                initialDate: context.read<TodayViewModel>().selectedDate,
                 onDateSelected: _onDateSelected,
                 onClose: _closeCalendar,
               ),
@@ -157,12 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Fixed top (does not scroll with pages) ──────────
-            // AnimatedBuilder: only rebuild header + week when date changes
-            // Divider is outside → stays const, never rebuilds
-            AnimatedBuilder(
-              animation: _todayVm,
-              builder: (context, _) {
+            // ── Fixed top (uses Provider — only rebuilds when date changes) ──
+            Consumer<TodayViewModel>(
+              builder: (context, todayVm, _) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -172,15 +171,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         totalTasks: 0,
                         completedHours: 0,
                         totalHours: 0,
-                        selectedDate: _todayVm.selectedDate,
+                        selectedDate: todayVm.selectedDate,
                         onDateTap: _toggleCalendar,
                       ),
                     ),
                     Padding(
                       padding: _weekStripPadding,
                       child: WeekStripWidget(
-                        week: _todayVm.week,
-                        selectedDate: _todayVm.selectedDate,
+                        week: todayVm.week,
+                        selectedDate: todayVm.selectedDate,
                         onDateTap: _onWeekDateSelected,
                       ),
                     ),
@@ -220,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: _bottomNavPadding,
               child: BottomNavBarWidget(
                 onSend: _onSend,
-                onImageTap: _onImageTap, // extracted closure
+                onImageTap: _onImageTap,
               ),
             ),
           ],

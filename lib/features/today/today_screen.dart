@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../chat/viewmodels/chat_viewmodel.dart';
-import '../viewModels/today_viewmodel.dart';
+import '../../features/chat/viewmodels/chat_viewmodel.dart';
+import '../../features/viewModels/today_viewmodel.dart';
 import 'widgets/bottom_nav_bar_widget.dart';
 import 'widgets/today_header_widget.dart';
 import 'widgets/week_strip_widget.dart';
 import 'widgets/calories_card.dart';
 import 'widgets/macros_card.dart';
-import '../chat/widgets/chat_bubble.dart';
+import '../../features/chat/widgets/chat_bubble.dart';
 
+/// TodayScreen using Provider for TodayViewModel.
+/// ChatViewModel is local to this screen (not shared globally).
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
@@ -18,33 +21,24 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  late final TodayViewModel _vm;
   late final ChatViewModel _chatVm;
 
   @override
   void initState() {
     super.initState();
-    _vm = TodayViewModel();
     _chatVm = ChatViewModel();
-    _vm.addListener(_onChanged);
-    _chatVm.addListener(_onChanged);
-  }
-
-  void _onChanged() {
-    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _vm.removeListener(_onChanged);
-    _chatVm.removeListener(_onChanged);
-    _vm.dispose();
     _chatVm.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final todayVm = context.watch<TodayViewModel>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -61,6 +55,10 @@ class _TodayScreenState extends State<TodayScreen> {
                         totalTasks: 0,
                         completedHours: 0,
                         totalHours: 0,
+                        selectedDate: todayVm.selectedDate,
+                        onDateTap: () {
+                          // TODO: open calendar
+                        },
                       ),
                     ),
                   ),
@@ -70,9 +68,9 @@ class _TodayScreenState extends State<TodayScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                     sliver: SliverToBoxAdapter(
                       child: WeekStripWidget(
-                        week: _vm.week,
-                        selectedDate: _vm.selectedDate,
-                        onDateTap: _vm.onDateSelected,
+                        week: todayVm.week,
+                        selectedDate: todayVm.selectedDate,
+                        onDateTap: todayVm.onDateSelected,
                       ),
                     ),
                   ),
@@ -87,15 +85,15 @@ class _TodayScreenState extends State<TodayScreen> {
                   // TODO: Add AlertBanner widget (calorie goal warning)
                   // const SliverToBoxAdapter(child: AlertBanner()),
 
-                  // TODO: CaloriesCard & MacrosCard — stat cards row
+                  // CaloriesCard & MacrosCard — stat cards row
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                     sliver: SliverToBoxAdapter(
                       child: Row(
                         children: [
-                          CaloriesCard(stats: _vm.dailyStats),
+                          CaloriesCard(stats: todayVm.dailyStats),
                           const SizedBox(width: 12),
-                          MacrosCard(stats: _vm.dailyStats),
+                          MacrosCard(stats: todayVm.dailyStats),
                         ],
                       ),
                     ),
@@ -119,7 +117,8 @@ class _TodayScreenState extends State<TodayScreen> {
                           child: SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child:
+                                CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
                       ),

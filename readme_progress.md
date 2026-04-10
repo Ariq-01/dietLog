@@ -7,6 +7,7 @@
 - [x] Kalender ✅
 - [x] Bubble Chat v2 ✅
 - [ ] Local Storage Hive
+- [ ] Firebase Login (iPhone & Google)
 
 ### Completed
 
@@ -16,6 +17,7 @@
 | 2 | CaloriesCard | `lib/features/today/widgets/calories_card.dart` | Apr 10 |
 | 3 | MacrosCard | `lib/features/today/widgets/macros_card.dart` | Apr 10 |
 | 4 | DailyStats Model | `lib/features/today/models/daily_stats.dart` | Apr 10 |
+| 5 | Firebase Login (iPhone & Google) | `lib/features/auth/` | Apr 10 |
 
 ---
 
@@ -25,6 +27,6 @@
 |---|------|----------|--------|-------|
 | 1 | AlertBanner Widget (Calorie Goal Warning) | Medium | ⬜ | Yellow banner + ⚠️ icon, tap to update goal |
 | 2 | User Splash Screen Update | Medium | ⬜ | Implement "Set Your Calorie Goal" flow |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 3 | Firebase Auth Setup | High | ⬜ | Configure Firebase project, add Sign in with Apple & Google providers |
+| 4 | Apple Sign In Integration | High | ⬜ | Implement Sign in with Apple for iPhone users |
+| 5 | Google Sign In Integration | High | ⬜ | Implement Google Sign In for Android & iOS |
