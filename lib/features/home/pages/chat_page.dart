@@ -4,8 +4,8 @@ import '../../chat/viewmodels/chat_viewmodel.dart';
 import '../../chat/widgets/chat_bubble.dart';
 import '../../chat/widgets/loading_user_message.dart';
 
-/// Single page content — shows chat messages for that page.
-/// Empty state shown if no messages exist yet.
+/// Single page content — shows chat messages for a specific date.
+/// Each page represents one day in the current week.
 /// Uses AnimatedBuilder to rebuild only when its own ChatViewModel changes.
 ///
 /// Loading behavior:
@@ -14,8 +14,9 @@ import '../../chat/widgets/loading_user_message.dart';
 /// - When AI responds, LoadingUserMessage disappears and normal bubbles appear
 class ChatPage extends StatelessWidget {
   final ChatViewModel chatVm;
+  final DateTime date;
 
-  const ChatPage({super.key, required this.chatVm});
+  const ChatPage({super.key, required this.chatVm, required this.date});
 
   @override
   Widget build(BuildContext context) {

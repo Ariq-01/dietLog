@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_colors.dart';
-import 'core/widgets/page_view_indicator.dart';
 import 'features/chat/viewmodels/chat_viewmodel.dart';
 import 'features/home/pages/chat_page.dart';
 import 'features/today/widgets/bottom_nav_bar_widget.dart';
@@ -11,15 +10,19 @@ import 'features/today/widgets/week_strip_widget.dart';
 import 'features/viewModels/today_viewmodel.dart';
 import 'widgets/calendar_widget.dart';
 
-/// Main home screen with 7 swipeable pages.
+/// Main home screen with 7 swipeable pages — one for each date in the current week.
 /// Top (TodayHeader + WeekStrip) and bottom (BottomNavBar) stay fixed —
 /// only the chat messages area changes per page.
-/// Pages: Today | Tasks | Habits | Notes | Stats | Goals | Settings
+///
+/// Date-centric navigation:
+/// - Swipe page → updates selectedDate in TodayViewModel
+/// - Tap date in WeekStrip → updates selectedDate + swipes to that page
+/// - Each page has its own ChatViewModel (created on-demand, cached by date)
 ///
 /// Performance optimizations:
 /// - TodayViewModel accessed via Provider — auto rebuild on date change
 /// - ChatPages use AnimatedBuilder per VM → no global setState
-/// - ChatPages cached in initState → no List.generate in build
+/// - ChatPages created on-demand via PageView.builder
 /// - Calendar overlay has no setState → no rebuild on open/close
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,12 +33,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
-  late final List<ChatViewModel> _chatVms;
-  late final List<ChatPage> _chatPages;
   OverlayEntry? _calendarOverlay;
 
-  // Single source of truth for current page — no duplicate state
-  late final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(0);
+  // Map: date string (YYYY-MM-DD) → ChatViewModel
+  final Map<String, ChatViewModel> _chatVmsByDate = {};
 
   // ── Layout Constants ──────────────────────────────────────────────
   static const _headerPadding = EdgeInsets.fromLTRB(20, 24, 20, 0);
@@ -43,16 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _bottomNavPadding = EdgeInsets.fromLTRB(16, 0, 16, 16);
   static const _calendarTop = 80.0;
   static const _calendarHorizontal = 20.0;
-
-  static const _pageTitles = [
-    'Today',
-    'Tasks',
-    'Habits',
-    'Notes',
-    'Stats',
-    'Goals',
-    'Settings',
-  ];
 
   // Extracted closures to avoid recreation on every build
   late final VoidCallback _onImageTap;
@@ -65,29 +56,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Create 7 independent ChatViewModels — one per page
-    _chatVms = List.generate(7, (_) => ChatViewModel());
-
-    // Hardcoded ChatPage instances to avoid loop overhead and ensure static structure
-    _chatPages = [
-      ChatPage(chatVm: _chatVms[0]),
-      ChatPage(chatVm: _chatVms[1]),
-      ChatPage(chatVm: _chatVms[2]),
-      ChatPage(chatVm: _chatVms[3]),
-      ChatPage(chatVm: _chatVms[4]),
-      ChatPage(chatVm: _chatVms[5]),
-      ChatPage(chatVm: _chatVms[6]),
-    ];
 
     // Extracted closures
     _onImageTap = () {
       // TODO: handle image upload
     };
     _onSend = (text) {
-      _chatVms[_currentPageNotifier.value].sendMessage(text);
+      final vm = context.read<TodayViewModel>();
+      final date = vm.selectedDate;
+      final chatVm = _getChatVmForDate(date);
+      chatVm.sendMessage(text);
     };
     _onPageChanged = (page) {
-      _currentPageNotifier.value = page;
+      // Swipe page → update selectedDate
+      final vm = context.read<TodayViewModel>();
+      final currentWeekMonday = vm.week.days.first.fullDate;
+      final newDate = currentWeekMonday.add(Duration(days: page));
+      vm.onDateSelected(newDate);
     };
     _toggleCalendar = () {
       if (_calendarOverlay != null) {
@@ -97,20 +82,48 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     };
 
-    // TodayViewModel now from Provider — callbacks use Provider
     _onDateSelected = (date) {
       context.read<TodayViewModel>().onDateSelected(date);
       _closeCalendar();
+      // Swipe to the page for this date
+      _swipeToDate(date);
     };
     _onWeekDateSelected = (date) {
       context.read<TodayViewModel>().onDateSelected(date);
+      _swipeToDate(date);
     };
+  }
+
+  ChatViewModel _getChatVmForDate(DateTime date) {
+    final key = _dateKey(date);
+    if (!_chatVmsByDate.containsKey(key)) {
+      _chatVmsByDate[key] = ChatViewModel();
+    }
+    return _chatVmsByDate[key]!;
+  }
+
+  String _dateKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  void _swipeToDate(DateTime date) {
+    final vm = context.read<TodayViewModel>();
+    final currentWeekMonday = vm.week.days.first.fullDate;
+    // Find which page index this date belongs to
+    final daysDiff = date.difference(currentWeekMonday).inDays;
+    if (daysDiff >= 0 && daysDiff < 7) {
+      _pageController.animateToPage(
+        daysDiff,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    for (final vm in _chatVms) {
+    for (final vm in _chatVmsByDate.values) {
       vm.dispose();
     }
     _calendarOverlay?.remove();
@@ -192,27 +205,26 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Divider(color: AppColors.divider, height: 1),
             ),
 
-            // ── PageView (only chat area changes per page) ──────
+            // ── PageView (7 pages = 7 dates in current week) ──
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                children: _chatPages, // cached list — no List.generate
+              child: Consumer<TodayViewModel>(
+                builder: (context, todayVm, _) {
+                  final monday = todayVm.selectedDate.subtract(
+                    Duration(days: todayVm.selectedDate.weekday - 1),
+                  );
+                  return PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: _onPageChanged,
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      final date = monday.add(Duration(days: index));
+                      final chatVm = _getChatVmForDate(date);
+                      return ChatPage(chatVm: chatVm, date: date);
+                    },
+                  );
+                },
               ),
             ),
-
-            // ── Dot indicator ───────────────────────────────────
-            const SizedBox(height: 8),
-            ValueListenableBuilder<int>(
-              valueListenable: _currentPageNotifier,
-              builder: (context, page, _) {
-                return PageViewIndicator(
-                  currentPage: page,
-                  pageCount: _pageTitles.length,
-                );
-              },
-            ),
-            const SizedBox(height: 8),
 
             // ── Fixed bottom input bar (does not scroll) ───────
             Padding(
