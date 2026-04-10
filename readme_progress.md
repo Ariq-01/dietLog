@@ -4,9 +4,18 @@
 
 ## Progress Widgets
 
-- [ ] Kalender
-- [ ] Bubble Chat v2
+- [x] Kalender ✅
+- [x] Bubble Chat v2 ✅
 - [ ] Local Storage Hive
+
+### Completed
+
+| # | Widget | File | Date |
+|---|--------|------|------|
+| 1 | LoadingUserMessage | `lib/features/chat/widgets/loading_user_message.dart` | Apr 10 |
+| 2 | CaloriesCard | `lib/features/today/widgets/calories_card.dart` | Apr 10 |
+| 3 | MacrosCard | `lib/features/today/widgets/macros_card.dart` | Apr 10 |
+| 4 | DailyStats Model | `lib/features/today/models/daily_stats.dart` | Apr 10 |
 
 ---
 
