@@ -21,23 +21,32 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  late final ChatViewModel _chatVm;
+  final Map<String, ChatViewModel> _chatVmsByDate = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _chatVm = ChatViewModel();
+  ChatViewModel _getChatVmForDate(DateTime date) {
+    final key = _dateKey(date);
+    if (!_chatVmsByDate.containsKey(key)) {
+      _chatVmsByDate[key] = ChatViewModel();
+    }
+    return _chatVmsByDate[key]!;
+  }
+
+  String _dateKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   @override
   void dispose() {
-    _chatVm.dispose();
+    for (final vm in _chatVmsByDate.values) {
+      vm.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final todayVm = context.watch<TodayViewModel>();
+    final chatVm = _getChatVmForDate(todayVm.selectedDate);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -103,13 +112,13 @@ class _TodayScreenState extends State<TodayScreen> {
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) =>
-                          ChatBubble(message: _chatVm.messages[index]),
-                      childCount: _chatVm.messages.length,
+                          ChatBubble(message: chatVm.messages[index]),
+                      childCount: chatVm.messages.length,
                     ),
                   ),
 
                   // Loading indicator
-                  if (_chatVm.isLoading)
+                  if (chatVm.isLoading)
                     const SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.all(20),
@@ -133,7 +142,7 @@ class _TodayScreenState extends State<TodayScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
               child: BottomNavBarWidget(
-                onSend: _chatVm.sendMessage,
+                onSend: chatVm.sendMessage,
                 onImageTap: () {
                   // TODO: handle image upload
                 },

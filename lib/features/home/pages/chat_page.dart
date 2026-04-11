@@ -34,7 +34,13 @@ class ChatPage extends StatelessWidget {
             // Chat messages
             SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => ChatBubble(message: chatVm.messages[index]),
+                (context, index) {
+                  final message = chatVm.messages[index];
+                  return KeyedSubtree(
+                    key: ValueKey('${message.timestamp.millisecondsSinceEpoch}'),
+                    child: ChatBubble(message: message),
+                  );
+                },
                 childCount: messageCount,
               ),
             ),
@@ -42,6 +48,7 @@ class ChatPage extends StatelessWidget {
             // Loading indicator (replaces user bubble while AI processes)
             if (shouldShowLoading)
               SliverToBoxAdapter(
+                key: const ValueKey('loading_message'),
                 child: LoadingUserMessage(
                   userMessage: chatVm.messages.last.content,
                 ),

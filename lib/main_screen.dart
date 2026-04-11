@@ -38,12 +38,20 @@ class _HomeScreenState extends State<HomeScreen> {
   // Map: date string (YYYY-MM-DD) → ChatViewModel
   final Map<String, ChatViewModel> _chatVmsByDate = {};
 
+  // Cached CalendarWidget to avoid recreation on every open
+  CalendarWidget? _cachedCalendar;
+
   // ── Layout Constants ──────────────────────────────────────────────
   static const _headerPadding = EdgeInsets.fromLTRB(20, 24, 20, 0);
   static const _weekStripPadding = EdgeInsets.fromLTRB(20, 20, 20, 0);
   static const _bottomNavPadding = EdgeInsets.fromLTRB(16, 0, 16, 16);
   static const _calendarTop = 80.0;
   static const _calendarHorizontal = 20.0;
+
+  static const _divider = Padding(
+    padding: EdgeInsets.only(top: 16),
+    child: Divider(color: AppColors.divider, height: 1),
+  );
 
   // Extracted closures to avoid recreation on every build
   late final VoidCallback _onImageTap;
@@ -106,6 +114,23 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
+  Widget _buildPageView() {
+    final todayVm = context.read<TodayViewModel>();
+    final monday = todayVm.selectedDate.subtract(
+      Duration(days: todayVm.selectedDate.weekday - 1),
+    );
+    return PageView.builder(
+      controller: _pageController,
+      onPageChanged: _onPageChanged,
+      itemCount: 7,
+      itemBuilder: (context, index) {
+        final date = monday.add(Duration(days: index));
+        final chatVm = _getChatVmForDate(date);
+        return ChatPage(chatVm: chatVm, date: date);
+      },
+    );
+  }
+
   void _swipeToDate(DateTime date) {
     final vm = context.read<TodayViewModel>();
     final currentWeekMonday = vm.week.days.first.fullDate;
@@ -130,6 +155,15 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  CalendarWidget _getCalendarWidget() {
+    _cachedCalendar ??= CalendarWidget(
+      initialDate: context.read<TodayViewModel>().selectedDate,
+      onDateSelected: _onDateSelected,
+      onClose: _closeCalendar,
+    );
+    return _cachedCalendar!;
+  }
+
   void _openCalendar() {
     final overlay = Overlay.of(context);
 
@@ -146,11 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
               top: _calendarTop,
               left: _calendarHorizontal,
               right: _calendarHorizontal,
-              child: CalendarWidget(
-                initialDate: context.read<TodayViewModel>().selectedDate,
-                onDateSelected: _onDateSelected,
-                onClose: _closeCalendar,
-              ),
+              child: _getCalendarWidget(),
             ),
           ],
         );
@@ -167,11 +197,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
+    return ChangeNotifierProvider<TodayViewModel>(
+      create: (_) => TodayViewModel(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
             // ── Fixed top (uses Provider — only rebuilds when date changes) ──
             Consumer<TodayViewModel>(
               builder: (context, todayVm, _) {
@@ -200,30 +232,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: Divider(color: AppColors.divider, height: 1),
-            ),
+            _divider,
 
             // ── PageView (7 pages = 7 dates in current week) ──
             Expanded(
-              child: Consumer<TodayViewModel>(
-                builder: (context, todayVm, _) {
-                  final monday = todayVm.selectedDate.subtract(
-                    Duration(days: todayVm.selectedDate.weekday - 1),
-                  );
-                  return PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
-                      final date = monday.add(Duration(days: index));
-                      final chatVm = _getChatVmForDate(date);
-                      return ChatPage(chatVm: chatVm, date: date);
-                    },
-                  );
-                },
-              ),
+              child: _buildPageView(),
             ),
 
             // ── Fixed bottom input bar (does not scroll) ───────
@@ -237,6 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

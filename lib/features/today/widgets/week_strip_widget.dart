@@ -23,10 +23,9 @@ class WeekStripWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final locale = MaterialLocalizations.of(context);
     final narrowDays = locale.narrowWeekdays;
-    
-    // Generate week based on selectedDate's month
-    final weekModel = WeekModel.fromDate(selectedDate);
-    final monday = weekModel.days.first.fullDate;
+
+    // Use the week parameter directly — no recomputation needed
+    final monday = week.days.first.fullDate;
     final dayLabels = List.generate(7, (i) {
       final d = monday.add(Duration(days: i));
       return narrowDays[d.weekday % 7];
@@ -35,7 +34,7 @@ class WeekStripWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
-        final day = weekModel.days[i];
+        final day = week.days[i];
         final isActive = day.fullDate.year == selectedDate.year &&
             day.fullDate.month == selectedDate.month &&
             day.fullDate.day == selectedDate.day;
